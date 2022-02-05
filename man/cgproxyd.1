@@ -15,6 +15,9 @@ enable execsnoop to support program level proxy, need bcc installed to actually 
 .B port 
 tproxy listenning port
 .br
+.B dns_port 
+dns listenning port
+.br
 program level proxy controll, only work when execsnoop enabled:
 .br
 .RS
@@ -40,6 +43,9 @@ enable gateway proxy for local devices.
 .br
 .B enable_dns
 enable dns to go to proxy.
+.br
+.B enable_dns_redirect
+redirect dns to dns_port.
 .br
 .B enable_tcp
 .br

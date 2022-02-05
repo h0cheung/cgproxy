@@ -114,12 +114,14 @@ Config file: **/etc/cgproxy/config.json**
 ```json
 {
     "port": 12345,
-    "program_noproxy": ["v2ray", "qv2ray"],
+    "dns_port": 1053,
+    "program_noproxy": ["clash", "v2ray", "qv2ray"],
     "program_proxy": [],
-    "cgroup_noproxy": ["/system.slice/v2ray.service"],
-    "cgroup_proxy": [],
+    "cgroup_noproxy": ["/system.slice/clash.service", "/system.slice/v2ray.service"],
+    "cgroup_proxy": ["/"],
     "enable_gateway": false,
     "enable_dns": true,
+    "enable_dns_redirect": true,
     "enable_udp": true,
     "enable_tcp": true,
     "enable_ipv4": true,

@@ -51,9 +51,11 @@ fi
 
 ## tproxy listening port
 [ -z ${port+x} ] && port=12345
+[ -z ${dns_port+x} ] && dns_port=1053
 
 ## controll options
 [ -z ${enable_dns+x} ]  && enable_dns=true
+[ -z ${enable_dns_redirect+x} ]  && enable_dns_redirect=true
 [ -z ${enable_udp+x} ]  && enable_udp=true
 [ -z ${enable_tcp+x} ]  && enable_tcp=true
 [ -z ${enable_ipv4+x} ] && enable_ipv4=true
@@ -78,16 +80,20 @@ stop(){
 
     iptables -w 60 -t mangle -D PREROUTING -j TPROXY_PRE
     iptables -w 60 -t mangle -D OUTPUT -j TPROXY_OUT
+    iptables -w 60 -t nat -D PREROUTING -p udp --dport 53 -j REDIRECT --to-ports $dns_port
+    iptables -w 60 -t nat -D OUTPUT -j DNS_OUT
 
     iptables -w 60 -t mangle -F TPROXY_PRE
     iptables -w 60 -t mangle -F TPROXY_ENT
     iptables -w 60 -t mangle -F TPROXY_OUT
     iptables -w 60 -t mangle -F TPROXY_MARK
+    iptables -w 60 -t nat -F DNS_OUT
 
     iptables -w 60 -t mangle -X TPROXY_PRE
     iptables -w 60 -t mangle -X TPROXY_ENT
     iptables -w 60 -t mangle -X TPROXY_OUT
     iptables -w 60 -t mangle -X TPROXY_MARK
+    iptables -w 60 -t nat -X DNS_OUT
 
     ip rule delete fwmark $fwmark_tproxy lookup $table_tproxy
     ip rule delete fwmark $fwmark_reroute lookup $table_reroute &> /dev/null
@@ -96,16 +102,20 @@ stop(){
 
     ip6tables -w 60 -t mangle -D PREROUTING -j TPROXY_PRE
     ip6tables -w 60 -t mangle -D OUTPUT -j TPROXY_OUT
+    ip6tables -w 60 -t nat -D PREROUTING -p udp --dport 53 -j REDIRECT --to-ports $dns_port
+    ip6tables -w 60 -t nat -D OUTPUT -j DNS_OUT
 
     ip6tables -w 60 -t mangle -F TPROXY_PRE
     ip6tables -w 60 -t mangle -F TPROXY_OUT
     ip6tables -w 60 -t mangle -F TPROXY_ENT
     ip6tables -w 60 -t mangle -F TPROXY_MARK
+    ip6tables -w 60 -t nat -F DNS_OUT
 
     ip6tables -w 60 -t mangle -X TPROXY_PRE
     ip6tables -w 60 -t mangle -X TPROXY_OUT
     ip6tables -w 60 -t mangle -X TPROXY_ENT
     ip6tables -w 60 -t mangle -X TPROXY_MARK
+    ip6tables -w 60 -t nat -X DNS_OUT
 
     ip -6 rule delete fwmark $fwmark_tproxy lookup $table_tproxy
     ip -6 rule delete fwmark $fwmark_reroute lookup $table_reroute &> /dev/null
@@ -257,6 +267,30 @@ ip6tables -w 60 -t mangle -A TPROXY_OUT -m cgroup --path $cg -j TPROXY_MARK
 done
 # hook
 $enable_ipv6 && ip6tables -w 60 -t mangle -A OUTPUT -j TPROXY_OUT
+
+## dns redirect ###################################################################
+if $enable_dns_redirect; then
+    iptables -w 60 -t nat -I PREROUTING -p udp --dport 53 -j REDIRECT --to-ports $dns_port
+    ip6tables -w 60 -t nat -I PREROUTING -p udp --dport 53 -j REDIRECT --to-ports $dns_port
+
+    iptables -w 60 -t nat -N DNS_OUT
+    for cg in ${cgroup_noproxy[@]}; do
+        iptables -w 60 -t nat -A DNS_OUT -m cgroup --path $cg -j RETURN
+    done
+    for cg in ${cgroup_proxy[@]}; do
+        iptables -w 60 -t nat -A DNS_OUT -p udp -m cgroup --path $cg -j REDIRECT --to-ports $dns_port
+    done
+    iptables -w 60 -t nat -I OUTPUT -j DNS_OUT
+
+    ip6tables -w 60 -t nat -N DNS_OUT
+    for cg in ${cgroup_noproxy[@]}; do
+        ip6tables -w 60 -t nat -A DNS_OUT -m cgroup --path $cg -j RETURN
+    done
+    for cg in ${cgroup_proxy[@]}; do
+        ip6tables -w 60 -t nat -A DNS_OUT -p udp -m cgroup --path $cg -j REDIRECT --to-ports $dns_port
+    done
+    ip6tables -w 60 -t nat -I OUTPUT -j DNS_OUT
+fi
 
 ## forward #######################################################################
 if $enable_gateway; then

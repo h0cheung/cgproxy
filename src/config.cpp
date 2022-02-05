@@ -28,7 +28,9 @@ void Config::toEnv() {
   setenv("cgroup_noproxy", join2str(cgroup_noproxy, ':').c_str(), 1);
   setenv("enable_gateway", to_str(enable_gateway).c_str(), 1);
   setenv("port", to_str(port).c_str(), 1);
+  setenv("dns_port", to_str(dns_port).c_str(), 1);
   setenv("enable_dns", to_str(enable_dns).c_str(), 1);
+  setenv("enable_dns_redirect", to_str(enable_dns_redirect).c_str(), 1);
   setenv("enable_tcp", to_str(enable_tcp).c_str(), 1);
   setenv("enable_udp", to_str(enable_udp).c_str(), 1);
   setenv("enable_ipv4", to_str(enable_ipv4).c_str(), 1);
@@ -55,7 +57,9 @@ string Config::toJsonStr() {
   add2json(cgroup_noproxy);
   add2json(enable_gateway);
   add2json(port);
+  add2json(dns_port);
   add2json(enable_dns);
+  add2json(enable_dns_redirect);
   add2json(enable_tcp);
   add2json(enable_udp);
   add2json(enable_ipv4);
@@ -91,7 +95,9 @@ int Config::loadFromJsonStr(const string js) {
   tryassign(cgroup_noproxy);
   tryassign(enable_gateway);
   tryassign(port);
+  tryassign(dns_port);
   tryassign(enable_dns);
+  tryassign(enable_dns_redirect);
   tryassign(enable_tcp);
   tryassign(enable_udp);
   tryassign(enable_ipv4);
@@ -117,7 +123,7 @@ void Config::mergeReserved() {
 bool Config::validateJsonStr(const string js) {
   json j = json::parse(js);
   bool status = true;
-  const set<string> boolset = {"enable_gateway", "enable_dns",  "enable_tcp",
+  const set<string> boolset = {"enable_gateway", "enable_dns", "enable_dns_redirect",  "enable_tcp",
                                "enable_udp",     "enable_ipv4", "enable_ipv6"};
   const set<string> allowset = {"program_proxy", "program_noproxy", "comment", "table", "fwmark", "mark_newin"};
   for (auto &[key, value] : j.items()) {
@@ -126,7 +132,7 @@ bool Config::validateJsonStr(const string js) {
       // TODO what if vector<int> etc.
       if (value.is_array() && !validCgroup((vector<string>)value)) status = false;
       if (!value.is_string() && !value.is_array()) status = false;
-    } else if (key == "port") {
+    } else if (key == "port" || key == "dns_port") {
       if (!validPort(value)) status = false;
     } else if (boolset.find(key) != boolset.end()) {
       if (!value.is_boolean()) status = false;

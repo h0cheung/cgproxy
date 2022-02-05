@@ -19,7 +19,9 @@ public:
   vector<string> cgroup_noproxy;
   bool enable_gateway = false;
   int port = 12345;
+  int dns_port = 1053;
   bool enable_dns = true;
+  bool enable_dns_redirect = true;
   bool enable_tcp = true;
   bool enable_udp = true;
   bool enable_ipv4 = true;
