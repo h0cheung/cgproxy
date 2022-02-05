@@ -134,6 +134,8 @@ Config file: **/etc/cgproxy/config.json**
 
 - **port** tproxy listenning port
 
+- **dns_port** dns listenning port
+
 - program level proxy control, need execsnoop enabled:
 
   - **program_proxy**  program need to be proxied
@@ -147,6 +149,8 @@ Config file: **/etc/cgproxy/config.json**
 - **enable_gateway** enable gateway proxy for local devices
 
 - **enable_dns** enable dns to go to proxy
+
+- **enable_dns_redirect** redirect dns to dns_port
 
 - **enable_tcp**
 
