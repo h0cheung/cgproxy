@@ -7,3 +7,4 @@ aur-*
 gh-md-toc
 add_toc.sh
 compile_commands.json
+.ccls-cache
