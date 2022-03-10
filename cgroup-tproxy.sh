@@ -73,6 +73,9 @@ fi
 ## cgroup mount point things
 [ -z ${cgroup_mount_point+x} ] && cgroup_mount_point=$(findmnt -t cgroup2 -n -o TARGET | head -n 1)
 
+[ -z ${reserved_ip+x} ] && reserved_ip=(0.0.0.0/8 10.0.0.0/8 100.64.0.0/10 127.0.0.0/8 169.254.0.0/16 172.16.0.0/12 192.0.0.0/24 192.0.2.0/24 192.168.0.0/16 198.51.100.0/24 203.0.113.0/24 224.0.0.0/4 255.255.255.255/32 240.0.0.0/4)
+[ -z ${reserved_ip6+x} ] && reserved_ip6=(::/128 ::1/128 ::ffff:0:0/96 100::/64 64:ff9b::/96 2001::/32 2001:10::/28 2001:20::/28 2001:db8::/32 2002::/16 fc00::/7 fe80::/10 ff00::/8)
+
 
 stop(){
     iptables -w 60 -t mangle -L TPROXY_ENT &> /dev/null || return
@@ -194,6 +197,9 @@ iptables -w 60 -t mangle -A TPROXY_ENT -p udp -j TPROXY --on-ip 127.0.0.1 --on-p
 iptables -w 60 -t mangle -N TPROXY_PRE
 iptables -w 60 -t mangle -A TPROXY_PRE -m addrtype --dst-type LOCAL -j RETURN
 iptables -w 60 -t mangle -A TPROXY_PRE -m addrtype ! --dst-type UNICAST -j RETURN
+for subnet in ${reserved_ip[@]}; do
+iptables -w 60 -t mangle -A TPROXY_PRE -d $subnet -j RETURN
+done
 $enable_gateway  || iptables -w 60 -t mangle -A TPROXY_PRE -m addrtype ! --src-type LOCAL -j RETURN
 $enable_dns && iptables -w 60 -t mangle -A TPROXY_PRE -p udp --dport 53 -j TPROXY_ENT
 $enable_udp && iptables -w 60 -t mangle -A TPROXY_PRE -p udp -j TPROXY_ENT
@@ -215,6 +221,9 @@ $enable_tcp && iptables -w 60 -t mangle -A TPROXY_MARK -p tcp -j MARK --set-mark
 # cgroup
 iptables -w 60 -t mangle -N TPROXY_OUT
 iptables -w 60 -t mangle -A TPROXY_OUT -m conntrack --ctdir REPLY -j RETURN
+for subnet in ${reserved_ip[@]}; do
+iptables -w 60 -t mangle -A TPROXY_OUT -d $subnet -j RETURN
+done
 for cg in ${cgroup_noproxy[@]}; do
 iptables -w 60 -t mangle -A TPROXY_OUT -m cgroup --path $cg -j RETURN
 done
@@ -238,6 +247,9 @@ ip6tables -w 60 -t mangle -A TPROXY_ENT -p udp -j TPROXY --on-ip ::1 --on-port $
 ip6tables -w 60 -t mangle -N TPROXY_PRE
 ip6tables -w 60 -t mangle -A TPROXY_PRE -m addrtype --dst-type LOCAL -j RETURN
 ip6tables -w 60 -t mangle -A TPROXY_PRE -m addrtype ! --dst-type UNICAST -j RETURN
+for subnet in ${reserved_ip6[@]}; do
+ip6tables -w 60 -t mangle -A TPROXY_PRE -d $subnet -j RETURN
+done
 $enable_gateway  || ip6tables -w 60 -t mangle -A TPROXY_PRE -m addrtype ! --src-type LOCAL -j RETURN
 $enable_dns && ip6tables -w 60 -t mangle -A TPROXY_PRE -p udp --dport 53 -j TPROXY_ENT
 $enable_udp && ip6tables -w 60 -t mangle -A TPROXY_PRE -p udp -j TPROXY_ENT
@@ -259,6 +271,9 @@ $enable_tcp && ip6tables -w 60 -t mangle -A TPROXY_MARK -p tcp -j MARK --set-mar
 # cgroup
 ip6tables -w 60 -t mangle -N TPROXY_OUT
 ip6tables -w 60 -t mangle -A TPROXY_OUT -m conntrack --ctdir REPLY -j RETURN
+for subnet in ${reserved_ip6[@]}; do
+ip6tables -w 60 -t mangle -A TPROXY_OUT -d $subnet -j RETURN
+done
 for cg in ${cgroup_noproxy[@]}; do
 ip6tables -w 60 -t mangle -A TPROXY_OUT -m cgroup --path $cg -j RETURN
 done
