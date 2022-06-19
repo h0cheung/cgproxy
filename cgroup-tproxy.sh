@@ -117,7 +117,7 @@ stop() {
         -d "/direct/rule[text()='-j TPROXY_PRE' or text()='-j TPROXY_OUT' or text()='-j DNS_OUT']" \
         -d "/direct/rule[text()='-m owner ! --socket-exists -j MASQUERADE']" \
         -d "/direct/rule[text()='-m owner ! --socket-exists -s fc00::/7 -j MASQUERADE']" \
-	-d "/direct/rule[text()='-p udp --dport 53 -j REDIRECT --to-ports $dns_port']" \
+        -d "/direct/rule[text()='-p udp --dport 53 -j REDIRECT --to-ports $dns_port']" \
         -d "/direct/*[@chain='DIVERT']" \
         -d "/direct/rule[text()='-p tcp -m socket -j DIVERT']" \
         $direct_xml_path
@@ -310,7 +310,7 @@ if $enable_dns_redirect; then
     for cg in ${cgroup_proxy[@]}; do
         direct_xml_add_rule ipv4 nat DNS_OUT 1 -p udp -m cgroup --path $cg -j REDIRECT --to-ports $dns_port
     done
-    direct_xml_add_rule ipv4 nat OUTPUT 1 -j DNS_OUT
+    direct_xml_add_rule ipv4 nat OUTPUT 1 -p udp --dport 53 -j DNS_OUT
 
     direct_xml_add_chain ipv6 nat DNS_OUT
     for cg in ${cgroup_noproxy[@]}; do
@@ -319,7 +319,7 @@ if $enable_dns_redirect; then
     for cg in ${cgroup_proxy[@]}; do
         direct_xml_add_rule ipv6 nat DNS_OUT 1 -p udp -m cgroup --path $cg -j REDIRECT --to-ports $dns_port
     done
-    direct_xml_add_rule ipv6 nat OUTPUT 1 -j DNS_OUT
+    direct_xml_add_rule ipv6 nat OUTPUT 1 -p udp --dport 53 -j DNS_OUT
 fi
 
 ## forward #######################################################################
