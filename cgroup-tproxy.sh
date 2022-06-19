@@ -106,9 +106,6 @@ fi
 ## cgroup mount point things
 [ -z ${cgroup_mount_point+x} ] && cgroup_mount_point=$(findmnt -t cgroup2 -n -o TARGET | head -n 1)
 
-[ -z ${reserved_ip+x} ] && reserved_ip=(0.0.0.0/8 10.0.0.0/8 100.64.0.0/10 127.0.0.0/8 169.254.0.0/16 172.16.0.0/12 192.0.0.0/24 192.0.2.0/24 192.168.0.0/16 198.51.100.0/24 203.0.113.0/24 224.0.0.0/4 255.255.255.255/32 240.0.0.0/4)
-[ -z ${reserved_ip6+x} ] && reserved_ip6=(::/128 ::1/128 ::ffff:0:0/96 100::/64 64:ff9b::/96 2001::/32 2001:10::/28 2001:20::/28 2001:db8::/32 2002::/16 fc00::/7 fe80::/10 ff00::/8)
-
 
 stop() {
     [ $(xmlstarlet sel -t -v "count(/direct/*[@chain='TPROXY_ENT' or @chain='TPROXY_PRE' or @chain='TPROXY_MARK' or @chain='TPROXY_OUT' or @chain='DNS_OUT'])" $direct_xml_path) -eq 0 ] && {
@@ -218,9 +215,6 @@ direct_xml_add_rule ipv4 mangle TPROXY_ENT 1 -p udp -j TPROXY --on-ip 127.0.0.1 
 direct_xml_add_chain ipv4 mangle TPROXY_PRE
 direct_xml_add_rule ipv4 mangle TPROXY_PRE 1 -m addrtype --dst-type LOCAL -j RETURN
 direct_xml_add_rule ipv4 mangle TPROXY_PRE 1 -m addrtype ! --dst-type UNICAST -j RETURN
-for subnet in ${reserved_ip[@]}; do
-    direct_xml_add_rule ipv4 mangle TPROXY_PRE 1 -d $subnet -j RETURN
-done
 $enable_gateway || direct_xml_add_rule ipv4 mangle TPROXY_PRE 1 -m addrtype ! --src-type LOCAL -j RETURN
 $enable_dns && direct_xml_add_rule ipv4 mangle TPROXY_PRE 1 -p udp --dport 53 -j TPROXY_ENT
 $enable_udp && direct_xml_add_rule ipv4 mangle TPROXY_PRE 1 -p udp -j TPROXY_ENT
@@ -242,9 +236,6 @@ $enable_tcp && direct_xml_add_rule ipv4 mangle TPROXY_MARK 1 -p tcp -j MARK --se
 # cgroup
 direct_xml_add_chain ipv4 mangle TPROXY_OUT
 direct_xml_add_rule ipv4 mangle TPROXY_OUT 1 -m conntrack --ctdir REPLY -j RETURN
-for subnet in ${reserved_ip[@]}; do
-    direct_xml_add_rule ipv4 mangle TPROXY_OUT 1 -d $subnet -j RETURN
-done
 for cg in ${cgroup_noproxy[@]}; do
     direct_xml_add_rule ipv4 mangle TPROXY_OUT 1 -m cgroup --path $cg -j RETURN
 done
@@ -276,9 +267,6 @@ direct_xml_add_rule ipv6 mangle TPROXY_ENT 1 -p udp -j TPROXY --on-ip ::1 --on-p
 direct_xml_add_chain ipv6 mangle TPROXY_PRE
 direct_xml_add_rule ipv6 mangle TPROXY_PRE 1 -m addrtype --dst-type LOCAL -j RETURN
 direct_xml_add_rule ipv6 mangle TPROXY_PRE 1 -m addrtype ! --dst-type UNICAST -j RETURN
-for subnet in ${reserved_ip6[@]}; do
-    direct_xml_add_rule ipv6 mangle TPROXY_PRE 1 -d $subnet -j RETURN
-done
 $enable_gateway || direct_xml_add_rule ipv6 mangle TPROXY_PRE 1 -m addrtype ! --src-type LOCAL -j RETURN
 $enable_dns && direct_xml_add_rule ipv6 mangle TPROXY_PRE 1 -p udp --dport 53 -j TPROXY_ENT
 $enable_udp && direct_xml_add_rule ipv6 mangle TPROXY_PRE 1 -p udp -j TPROXY_ENT
@@ -300,9 +288,6 @@ $enable_tcp && direct_xml_add_rule ipv6 mangle TPROXY_MARK 1 -p tcp -j MARK --se
 # cgroup
 direct_xml_add_chain ipv6 mangle TPROXY_OUT
 direct_xml_add_rule ipv6 mangle TPROXY_OUT 1 -m conntrack --ctdir REPLY -j RETURN
-for subnet in ${reserved_ip6[@]}; do
-    direct_xml_add_rule ipv6 mangle TPROXY_OUT 1 -d $subnet -j RETURN
-done
 for cg in ${cgroup_noproxy[@]}; do
     direct_xml_add_rule ipv6 mangle TPROXY_OUT 1 -m cgroup --path $cg -j RETURN
 done
