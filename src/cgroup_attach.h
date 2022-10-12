@@ -5,7 +5,8 @@
 #include <string>
 using namespace std;
 
-namespace CGPROXY::CGROUP {
+namespace CGPROXY::CGROUP
+{
 extern string cgroup2_mount_point;
 bool validate(string pid, string cgroup);
 int attach(const string pid, const string cgroup_target);

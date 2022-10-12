@@ -6,13 +6,14 @@
 #include <string>
 using namespace std;
 
-namespace CGPROXY::EXECSNOOP {
+namespace CGPROXY::EXECSNOOP
+{
 
 extern "C" void startThread(function<int(int)> c, promise<void> _status);
 
 #ifdef BUIlD_EXECSNOOP_DL
 // only for dlsym()
-using startThread_t=decltype(startThread);
+using startThread_t = decltype(startThread);
 startThread_t *_startThread;
 #endif
 

@@ -6,7 +6,8 @@
 #include <string>
 using namespace std;
 
-namespace CGPROXY::EXECSNOOP {
+namespace CGPROXY::EXECSNOOP
+{
 
 extern const string BPF_PROGRAM;
 struct data_t;
@@ -16,7 +17,7 @@ int execsnoop();
 
 extern "C" void startThread(function<int(int)> c, promise<void> _status);
 // typedef void startThread_t(function<int(int)>, promise<void>);
-using startThread_t=decltype(startThread);
+using startThread_t = decltype(startThread);
 startThread_t *_startThread; // only for dlsym()
 
 } // namespace CGPROXY::EXECSNOOP
