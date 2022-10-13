@@ -119,6 +119,7 @@ stop() {
         -d "/direct/rule[text()='-m owner ! --socket-exists -s fc00::/7 -j MASQUERADE']" \
         -d "/direct/rule[text()='-p udp --dport 53 -j REDIRECT --to-ports $dns_port']" \
         -d "/direct/*[@chain='DIVERT']" \
+        -d "/direct/rule[text()='-p udp --dport 53 -j DNS_OUT']" \
         -d "/direct/rule[text()='-p tcp -m socket -j DIVERT']" \
         $direct_xml_path
     firewall-cmd --reload || :
